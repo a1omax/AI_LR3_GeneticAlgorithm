@@ -12,7 +12,7 @@ public class Evolution {
 
     private static final int N_MUTATIONS = 1;
 
-    private static final int MAX_MUTATION_VALUE = 7;
+    private final int MAX_MUTATION_VALUE;
 
     Calculator calculator;
 
@@ -21,8 +21,9 @@ public class Evolution {
     private List<Chromosome> chromosomeList;
 
     private int epoch = 1;
-    public Evolution(Calculator calculator) {
+    public Evolution(Calculator calculator, int MAX_MUTATION_VALUE) {
         this.calculator = calculator;
+        this.MAX_MUTATION_VALUE = MAX_MUTATION_VALUE;
     }
 
     public void runGeneticAlgorithm(int numberOfChromosomes, int numberOfGenes) {
