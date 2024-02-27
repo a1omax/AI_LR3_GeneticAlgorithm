@@ -31,7 +31,7 @@ public class Chromosome {
         int randomGenePos = App.RANDOM.nextInt(this.getGenes().size());
         int randomMutationValue = App.RANDOM.nextInt(mutationOrigin, mutationBound);
 
-        this.genes.get(randomGenePos).setValue(randomMutationValue);
+        this.genes.set(randomGenePos, new Gene(randomMutationValue));
     }
     public static List<Chromosome> makeRecombinations(List<Chromosome> chromosomeList){
 

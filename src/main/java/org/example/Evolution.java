@@ -8,8 +8,6 @@ import java.util.stream.IntStream;
 
 
 public class Evolution {
-    //    private static double K = 0.75;
-
     private static final int N_MUTATIONS = 1;
 
     private final int MAX_MUTATION_VALUE;
@@ -78,7 +76,7 @@ public class Evolution {
             sortedChromosomes.add(this.chromosomeList.get(index));
         }
 
-
+        // copy best
         Chromosome bestChromosomeFromOldGeneration = new Chromosome(sortedChromosomes.getFirst());
 
         List<Chromosome> newGeneration = new ArrayList<>();

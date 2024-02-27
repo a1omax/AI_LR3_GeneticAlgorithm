@@ -11,10 +11,10 @@ public class App {
 
     }
     public void run(){
-        int[] functionCoefficients = {2, 8, 5, 7, -6, 4, -5, 5, 15, 1, 0, 0, -9};
+        int[] functionCoefficients = {2, 8, 5, 7, -6};
         int numberOfChromosomes = 10;
         int numberOfGenes = functionCoefficients.length;
-        int d = 7014;
+        int d = 7;
 
         Calculator calculator = new Calculator(functionCoefficients, d);
 
