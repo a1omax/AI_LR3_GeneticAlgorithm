@@ -1,14 +1,13 @@
 package org.example;
 
 import java.util.ArrayList;
-import java.util.Arrays;
+
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.IntStream;
 
 
 public class Evolution {
-    private static final int N_MUTATIONS = 1;
 
     private final int MAX_MUTATION_VALUE;
 
@@ -19,6 +18,7 @@ public class Evolution {
     private List<Chromosome> chromosomeList;
 
     private int epoch = 1;
+
     public Evolution(Calculator calculator, int MAX_MUTATION_VALUE) {
         this.calculator = calculator;
         this.MAX_MUTATION_VALUE = MAX_MUTATION_VALUE;
@@ -27,7 +27,7 @@ public class Evolution {
     public void runGeneticAlgorithm(int numberOfChromosomes, int numberOfGenes) {
         chromosomeList = Utils.generateChromosomeList(numberOfChromosomes, numberOfGenes, 0, calculator.d);
         resultChromosome = null;
-        while (resultChromosome==null){
+        while (resultChromosome == null) {
             resultChromosome = runEpoch();
         }
     }
@@ -71,18 +71,18 @@ public class Evolution {
         System.out.println("Total difference: " + listDifference.stream().mapToInt(Integer::intValue).sum());
 
         ArrayList<Chromosome> sortedChromosomes = new ArrayList<>();
-
+        ArrayList<Double> sortedAdaptationCoefficients = new ArrayList<>();
         for (int index : sortedIndexes) {
             sortedChromosomes.add(this.chromosomeList.get(index));
+            sortedAdaptationCoefficients.add(adaptationCoefficientList.get(index));
         }
 
         // copy best
         Chromosome bestChromosomeFromOldGeneration = new Chromosome(sortedChromosomes.getFirst());
 
-        List<Chromosome> newGeneration = new ArrayList<>();
-        for (int i = 0; i < this.chromosomeList.size() - 1; i++) {
-            newGeneration.add(getRandomRankedChromosome(sortedChromosomes));
-        }
+        // sorted
+        List<Chromosome> newGeneration = getRandomRankedChromosomeList(sortedChromosomes, sortedAdaptationCoefficients, 2*chromosomeList.size()-1);
+
 
         // Recombination
         newGeneration = Chromosome.makeRecombinations(newGeneration);
@@ -94,7 +94,7 @@ public class Evolution {
             Utils.randomChoice(newGeneration).mutateOneRandomGene(0, MAX_MUTATION_VALUE);
         }
 
-
+        // Add best parent
         newGeneration.add(bestChromosomeFromOldGeneration);
 
         this.chromosomeList = newGeneration;
@@ -103,29 +103,29 @@ public class Evolution {
     }
 
 
-    public Chromosome getRandomRankedChromosome(ArrayList<Chromosome> chromosomeArrayList) {
-        int size = chromosomeArrayList.size();
+    public List<Chromosome> getRandomRankedChromosomeList(List<Chromosome> chromosomeArrayList, List<Double> adaptationCoefficients, int numberOfChromosomes) {
 
-        double[] weights = new double[chromosomeArrayList.size()];
+        List<Chromosome> randomChromosomeList = new ArrayList<>();
 
-        for (int i = 0; i < chromosomeArrayList.size(); i++){
-            weights[i] = (double) size /(i+1);
+        for (int i = 0; i < numberOfChromosomes; i++) {
+
+            randomChromosomeList.add(selectRandomChromosome(chromosomeArrayList, adaptationCoefficients));
         }
 
-        double totalWeight = Arrays.stream(weights).sum();
+        return randomChromosomeList;
+    }
 
-
-        double randomValue = App.RANDOM.nextDouble()*totalWeight; // Нормалізація
+    private static Chromosome selectRandomChromosome(List<Chromosome> chromosomeArrayList, List<Double> adaptationCoefficients) {
+        double randomValue = App.RANDOM.nextDouble();
         double cumulativeWeight = 0.0;
-        for (int i = 0; i < size; i++) {
-            cumulativeWeight += weights[i];
+        for (int i = 0; i < adaptationCoefficients.size(); i++) {
+            cumulativeWeight += adaptationCoefficients.get(i);
             if (randomValue < cumulativeWeight) {
                 return chromosomeArrayList.get(i);
             }
         }
-
-        // This should never happen if the weights are correctly set,
         return null;
     }
+
 
 }
