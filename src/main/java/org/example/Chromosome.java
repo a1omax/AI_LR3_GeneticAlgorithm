@@ -33,11 +33,12 @@ public class Chromosome {
 
         this.genes.set(randomGenePos, new Gene(randomMutationValue));
     }
-    public static List<Chromosome> makeRecombinations(List<Chromosome> chromosomeList){
+
+    public static List<Chromosome> makeRecombinations(List<Chromosome> chromosomeList, int numberOfChildren){
 
         List<Chromosome> recombinatedList = new ArrayList<>();
 
-        for (int i = 0; i < chromosomeList.size(); i++) {
+        for (int i = 0; i < numberOfChildren; i++) {
             Chromosome firstChromosome = Utils.randomChoice(chromosomeList);
             Chromosome secondChromosome = Utils.randomChoice(chromosomeList);
 

@@ -80,15 +80,17 @@ public class Evolution {
         // copy best
         Chromosome bestChromosomeFromOldGeneration = new Chromosome(sortedChromosomes.getFirst());
 
+        int nChildren = sortedChromosomes.size()-1;
+
+
         // sorted
-        List<Chromosome> newGeneration = getRandomRankedChromosomeList(sortedChromosomes, sortedAdaptationCoefficients, 2*chromosomeList.size()-1);
+        List<Chromosome> parents = getRandomRankedChromosomeList(sortedChromosomes, sortedAdaptationCoefficients, 2*nChildren);
 
 
         // Recombination
-        newGeneration = Chromosome.makeRecombinations(newGeneration);
+        List<Chromosome> newGeneration = Chromosome.makeRecombinations(parents, nChildren);
 
-
-        // And mutate random element
+        // And mutate random elements  newGeneration.size()
 
         for (int i = 0; i < newGeneration.size(); i++) {
             Utils.randomChoice(newGeneration).mutateOneRandomGene(0, MAX_MUTATION_VALUE);
