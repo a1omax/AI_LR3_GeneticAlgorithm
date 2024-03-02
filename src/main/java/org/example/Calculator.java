@@ -1,53 +1,59 @@
 package org.example;
 
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.List;
-import java.util.Random;
-import java.util.stream.Collectors;
+
 
 public class Calculator {
 
+    private final double xMin;
+    private final double xMax;
 
-    public int[] functionCoefficients;
-    public int d;
+    private final double size;
 
-    public Calculator(int[] functionCoefficients, int d){
-        this.functionCoefficients = functionCoefficients;
-        this.d = d;
-    }
-
-
-    private int adaptationFunction(Chromosome chromosome) {
-        List<Integer> chromosomeValues = chromosome.getGenes().stream().map(Gene::getValue).toList();
-
-        int sum = 0;
-
-        for (int i = 0; i < functionCoefficients.length; i++) {
-            sum += functionCoefficients[i] * chromosomeValues.get(i);
+    public Calculator(double xMin, double xMax) {
+        if (xMin > xMax) {
+            throw new RuntimeException("xMin can not be more than xMax");
         }
-        return sum;
+
+        this.xMax = xMax;
+        this.xMin = xMin;
+        this.size = xMax - xMin;
     }
 
-    public int calculateDifference(Chromosome chromosome) {
-        return Math.abs(d - adaptationFunction(chromosome));
+
+    private double function(Chromosome chromosome) {
+        List<Boolean> chromosomeValues = chromosome.getGenes().stream().map(Gene::getValue).toList();
+
+
+        int center = chromosomeValues.size() / 2;
+
+        // todo test
+        int intValue1 = Utils.booleanListToInteger(chromosomeValues.subList(0, center));
+        int intValue2 = Utils.booleanListToInteger(chromosomeValues.subList(center, chromosomeValues.size()));
+
+        double result = f(Utils.tabulatedValue(intValue1, this.size, this.xMin, center),
+                Utils.tabulatedValue(intValue2, this.size, this.xMin, center));
+
+        return result;
     }
 
-    public List<Integer> calculateListDifference(List<Chromosome> chromosomes){
-        return chromosomes.stream().map(this::calculateDifference).toList();
-     }
 
-
-    public List<Double> calculateReversedListDifference(List<Integer> differences) {
-        return differences.stream().map(d->1./d).toList();
+    private double f(double x1, double x2) {
+        return 20 + x1 * x1 + x2 * x2 - 10 * Math.cos(2 * Math.PI * x1) - 10 * Math.cos(2 * Math.PI * x2);
     }
 
-    public List<Double> calculateAdaptationCoefficientList(List<Double> reversedListDifference) {
-
-        double reversedDifferencesSum = reversedListDifference.stream().mapToDouble(Double::doubleValue).sum();
-
-        return reversedListDifference.stream().map(rd -> rd / reversedDifferencesSum).toList();
-
+    public List<Double> calculateListResults(List<Chromosome> chromosomeList) {
+        return chromosomeList.stream().map(this::function).toList();
     }
+
+
+    public static List<Double> subtractMinValueFromList(List<Double> list){
+        Double minValue = Collections.min(list);
+
+        return list.stream().map(d->d-minValue).toList();
+    }
+
+
 
 }

@@ -27,11 +27,10 @@ public class Chromosome {
         return genes;
     }
 
-    public void mutateOneRandomGene(int mutationOrigin, int mutationBound){
+    public void mutateOneRandomGene(){
         int randomGenePos = App.RANDOM.nextInt(this.getGenes().size());
-        int randomMutationValue = App.RANDOM.nextInt(mutationOrigin, mutationBound);
 
-        this.genes.set(randomGenePos, new Gene(randomMutationValue));
+        this.genes.set(randomGenePos, new Gene(!genes.get(randomGenePos).getValue()));
     }
 
     public static List<Chromosome> makeRecombinations(List<Chromosome> chromosomeList, int numberOfChildren){

@@ -3,9 +3,9 @@ package org.example;
 
 public class Gene {
 
-    private int value = 0;
+    private boolean value = false; // bit
 
-    public Gene(int value){
+    public Gene(boolean value){
         this.value = value;
     }
     public Gene(Gene gene){
@@ -13,12 +13,12 @@ public class Gene {
     }
 
 
-    public int getValue() {
+    public boolean getValue() {
         return value;
     }
 
     @Override
     public String toString() {
-        return String.valueOf(value);
+        return String.valueOf(value?1:0);
     }
 }

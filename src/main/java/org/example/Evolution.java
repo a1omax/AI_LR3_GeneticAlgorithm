@@ -1,39 +1,49 @@
 package org.example;
 
-import java.util.ArrayList;
+import lombok.Getter;
 
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 
 public class Evolution {
 
-    private final int MAX_MUTATION_VALUE;
-
     Calculator calculator;
 
+    @Getter
     private Chromosome resultChromosome;
 
     private List<Chromosome> chromosomeList;
 
     private int epoch = 1;
 
-    public Evolution(Calculator calculator, int MAX_MUTATION_VALUE) {
+    private double mutationChance;
+
+    private int nEpochs;
+
+    public Evolution(Calculator calculator, double mutationChance, int nEpochs) {
         this.calculator = calculator;
-        this.MAX_MUTATION_VALUE = MAX_MUTATION_VALUE;
+        this.mutationChance = mutationChance;
+        this.nEpochs = nEpochs;
     }
 
     public void runGeneticAlgorithm(int numberOfChromosomes, int numberOfGenes) {
-        chromosomeList = Utils.generateChromosomeList(numberOfChromosomes, numberOfGenes, 0, calculator.d);
+        chromosomeList = Utils.generateChromosomeList(numberOfChromosomes, numberOfGenes);
         resultChromosome = null;
-        while (resultChromosome == null) {
-            resultChromosome = runEpoch();
-        }
-    }
+        for (int i = 0; i < nEpochs; i++) {
 
-    public Chromosome getResultChromosome() {
-        return resultChromosome;
+            Chromosome bestChromosome = runEpoch();
+
+            if (bestChromosome == null){
+                System.out.println("No other values in epoch, breaking the loop");
+                break;
+            }
+            else {
+                resultChromosome = bestChromosome;
+            }
+        }
     }
 
     public int getResultEpoch() {
@@ -42,58 +52,48 @@ public class Evolution {
 
     private Chromosome runEpoch() {
 
-        List<Integer> listDifference = calculator.calculateListDifference(this.chromosomeList);
+        List<Double> listResults = calculator.calculateListResults(chromosomeList);
 
-        Optional<Integer> optionalChromosomeResultIndex = IntStream.range(0, listDifference.size())
-                .filter(i -> listDifference.get(i) == 0)
+        List<Integer> sortedIndexes = IntStream.range(0, listResults.size())
                 .boxed()
-                .findFirst();
-
-        if (optionalChromosomeResultIndex.isPresent()) {
-            return this.chromosomeList.get(optionalChromosomeResultIndex.get());
-        }
-
-
-        List<Double> adaptationCoefficientList =
-                calculator.calculateAdaptationCoefficientList(calculator.calculateReversedListDifference(listDifference));
-
-
-        List<Integer> sortedIndexes = IntStream.range(0, adaptationCoefficientList.size())
-                .boxed()
-                .sorted((i1, i2) -> Double.compare(adaptationCoefficientList.get(i2), adaptationCoefficientList.get(i1))).toList();
-
-        System.out.println();
-        System.out.println("Epoch: " + this.epoch);
-        System.out.println("best: " + this.chromosomeList.get(sortedIndexes.getFirst()));
-        System.out.println("adaptation coefficient: " + adaptationCoefficientList.get(sortedIndexes.getFirst()));
-        System.out.println("best chromosome difference: " + listDifference.get(sortedIndexes.getFirst()));
-        System.out.println();
-        System.out.println("Total difference: " + listDifference.stream().mapToInt(Integer::intValue).sum());
+                .sorted(Comparator.comparingDouble(listResults::get).reversed()).toList();
 
         ArrayList<Chromosome> sortedChromosomes = new ArrayList<>();
-        ArrayList<Double> sortedAdaptationCoefficients = new ArrayList<>();
+        ArrayList<Double> sortedListResults = new ArrayList<>();
         for (int index : sortedIndexes) {
+            sortedListResults.add(listResults.get(index));
             sortedChromosomes.add(this.chromosomeList.get(index));
-            sortedAdaptationCoefficients.add(adaptationCoefficientList.get(index));
         }
 
         // copy best
         Chromosome bestChromosomeFromOldGeneration = new Chromosome(sortedChromosomes.getFirst());
 
-        int nChildren = sortedChromosomes.size()-1;
+
+        System.out.println();
+        System.out.println("Epoch: " + this.epoch);
+        System.out.println("best: " + bestChromosomeFromOldGeneration);
+        System.out.println("best chromosome value: " + listResults.get(sortedIndexes.getFirst()));
+        System.out.println();
+        //System.out.println("Total difference: " + listDifference.stream().mapToDouble(Double::doubleValue).sum());
 
 
-        // sorted
-        List<Chromosome> parents = getRandomRankedChromosomeList(sortedChromosomes, sortedAdaptationCoefficients, 2*nChildren);
+        int nChildren = sortedChromosomes.size() - 1;
 
+        // sorted // todo bad code
+        List<Chromosome> parents = getRandomRankedChromosomeList(sortedChromosomes, sortedListResults, 2 * nChildren);
+        if (parents.contains(null)){
+            return null;
+        }
 
         // Recombination
         List<Chromosome> newGeneration = Chromosome.makeRecombinations(parents, nChildren);
 
         // And mutate random elements  newGeneration.size()
 
-        for (int i = 0; i < newGeneration.size(); i++) {
-            Utils.randomChoice(newGeneration).mutateOneRandomGene(0, MAX_MUTATION_VALUE);
+        for (Chromosome chromosome : newGeneration) {
+            if (App.RANDOM.nextDouble() <= this.mutationChance) {
+                chromosome.mutateOneRandomGene();
+            }
         }
 
         // Add best parent
@@ -101,27 +101,32 @@ public class Evolution {
 
         this.chromosomeList = newGeneration;
         this.epoch += 1;
-        return null;
+
+        return bestChromosomeFromOldGeneration;
     }
 
 
-    public List<Chromosome> getRandomRankedChromosomeList(List<Chromosome> chromosomeArrayList, List<Double> adaptationCoefficients, int numberOfChromosomes) {
+    public List<Chromosome> getRandomRankedChromosomeList(List<Chromosome> chromosomeArrayList, List<Double> listResults, int numberOfChromosomes) {
+        listResults = Calculator.subtractMinValueFromList(listResults);
+
 
         List<Chromosome> randomChromosomeList = new ArrayList<>();
 
         for (int i = 0; i < numberOfChromosomes; i++) {
 
-            randomChromosomeList.add(selectRandomChromosome(chromosomeArrayList, adaptationCoefficients));
+            randomChromosomeList.add(selectRandomChromosome(chromosomeArrayList, listResults));
         }
 
         return randomChromosomeList;
     }
 
-    private static Chromosome selectRandomChromosome(List<Chromosome> chromosomeArrayList, List<Double> adaptationCoefficients) {
-        double randomValue = App.RANDOM.nextDouble();
+    private static Chromosome selectRandomChromosome(List<Chromosome> chromosomeArrayList, List<Double> listResults) {
+
+
+        double randomValue = App.RANDOM.nextDouble() * listResults.stream().mapToDouble(Double::doubleValue).sum();
         double cumulativeWeight = 0.0;
-        for (int i = 0; i < adaptationCoefficients.size(); i++) {
-            cumulativeWeight += adaptationCoefficients.get(i);
+        for (int i = 0; i < listResults.size(); i++) {
+            cumulativeWeight += listResults.get(i);
             if (randomValue < cumulativeWeight) {
                 return chromosomeArrayList.get(i);
             }

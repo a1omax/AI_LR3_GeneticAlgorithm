@@ -6,19 +6,18 @@ public class App {
     public static final Random RANDOM = new Random(System.currentTimeMillis());
 
     public static void main( String[] args ) {
-
         new App().run();
-
     }
+
     public void run(){
-        int[] functionCoefficients = {2, 8, 5, 7, -6};
-        int numberOfChromosomes = 10;
-        int numberOfGenes = functionCoefficients.length;
-        int d = 7;
+        int numberOfChromosomes = 100;
+        int numberOfGenes = 16;
+        double mutationChance = 0.02;
+        int nEpochs = 15;
 
-        Calculator calculator = new Calculator(functionCoefficients, d);
+        Calculator calculator = new Calculator(-5.12, 5.12);
 
-        Evolution evolution = new Evolution(calculator, d);
+        Evolution evolution = new Evolution(calculator, mutationChance, nEpochs);
 
         evolution.runGeneticAlgorithm(numberOfChromosomes, numberOfGenes);
         System.out.println("\n----------------------------------");
